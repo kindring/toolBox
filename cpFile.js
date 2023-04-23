@@ -113,6 +113,56 @@ function changeFileName(dir) {
     });
 }
 
+// 将文件夹中的图片转移到另一个文件夹中,并且将文件名修改为从1开始的数字 使用async await 配合 [err,res] = await handle(readDir(dir))的方式,禁止使用callback 提前结束函数
+async function moveImage(dir, targetDir) {
+    let [err, files] = await handle(readDir(dir));
+    if (err) {
+        console.log(err);
+        return;
+    }
+    files.forEach(async (file, index) => {
+        let oldPath = path.join(dir, file);
+        let newPath = path.join(targetDir, index + ".jpg");
+        let [err] = await handle(fs.rename(oldPath, newPath));
+        if (err) {
+            console.log(err);
+            return;
+        }
+    });
+}
+
+// 一个带取消功能的延迟函数可以在外部调用cancel方法来 取消执行
+function delay(time) {
+    let timer = null;
+    let promise = new Promise((resolve, reject) => {
+        timer = setTimeout(() => {
+            resolve();
+        }, time);
+    });
+    promise.cancel = (msg) => {
+        clearTimeout(timer);
+        reject(msg);
+    };
+    return promise;
+}
+
+
+function changeImageName(dir) {
+    readDir(dir).then((files) => {
+        files.forEach((file, index) => {
+            let oldPath = path.join(dir, file);
+            let newPath = path.join(dir, index + ".jpg");
+            fs.rename(oldPath, newPath, (err) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log("修改成功");
+                }
+            });
+        });
+    });
+}
+
 /**
  * 读取文件
  * @param filePath
